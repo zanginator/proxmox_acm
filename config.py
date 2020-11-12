@@ -12,6 +12,7 @@ token_value = 'xxxxxxxxxxxxxxxxx'
 
 proxmoxAPI = None
 cluster_info = {}
+db = None
 terminal_main_menu_exit = False
 
 logo = "Proxmox ACM"

@@ -8,6 +8,7 @@ There are several required modules for python. They are:
 - [proxmoxer](https://github.com/proxmoxer/proxmoxer)
 - requests (for proxmoxer)
 - [simple-term-menu](https://github.com/IngoMeyer441/simple-term-menu) 
+- [tinydb](https://github.com/msiemens/tinydb)
 
 These are all available on pip.
 
@@ -58,9 +59,18 @@ Once this is done. ACM should be ready to run.
 
 It is advised that the machine (or VM) running ACM is also added to Proxmox as a qdevice.
 This is so that if the cluster drops to just one machine being online, the cluster Quorum is still maintained.
-If Quorum is not avaliable, some administrative functions may fail (and Wake-On-LAN).
+If Quorum is not available, some administrative functions may fail (and Wake-On-LAN).
 
 ## Changelog
+### 0.0.2 (2020-11-12)
+- Cleanup of Code.
+  - Applied proper Python forming to some functions.
+  - Added some more comments.
+- Removal of 'Network Info' in node info menu.
+- Added VM information querying.
+- Added Migration controls to VM and Node Menu.
+- Added TinyDB to store information and settings.
+
 ### 0.0.1 (2020-11-05)
 - Initial Commit
 
