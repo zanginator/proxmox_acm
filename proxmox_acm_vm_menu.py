@@ -89,8 +89,8 @@ def vm_stats(menu_item) -> str:
 # Allows for the user to see specific vm information.
 def vm_menu() -> None:
     terminal_vm_menu_exit = False
-    terminal_vm_menu_items = ["CPU Info", "Memory Info", "Other Stat", "Toggle Migration", "Select VM",
-                              "Back to Main Menu"]
+    terminal_vm_menu_items = ["CPU Info", "Memory Info", "Other Stat", "Toggle Migration", "Manual Migration",
+                              "Select VM", "Back to Main Menu"]
     terminal_vm_menu = TerminalMenu(title="Main Menu -> VM Menu\nCurrently Querying VM: " + vm_selected + "\n"
                                     , menu_entries=terminal_vm_menu_items, preview_command=vm_stats, clear_screen=True)
 
@@ -108,11 +108,48 @@ def vm_menu() -> None:
                     # Set to true
                     config.db.table('vm').update({'migration': 'true'}, doc_ids=[r.doc_id])
         elif selection == 4:
+            # Manual Migration
+            migrate_menu()
+        elif selection == 5:
             # Go back to VM selection
             vm_selection()
-        elif selection == 5:
+        elif selection == 6:
             # Exit to main menu
             terminal_vm_menu_exit = True
+    return
+
+
+def migrate_menu() -> None:
+    terminal_migrate_menu_exit = False
+    host_node = ""
+    terminal_migrate_menu_items = ["Cancel Migration"]
+    stat = config.proxmoxAPI.cluster.resources.get(type='vm')
+    for info in stat:
+        if info["id"] == vm_selected:
+            host_node = str(info["node"])
+            # Strip "qemu/" string from VM ID.
+            vm_id = vm_selected[len("qemu/"):]
+
+    # Assemble String for Menu
+    for r in config.db.table('node'):
+        if (r['status'] == "online") and (r['id'] != host_node):
+            terminal_migrate_menu_items.append(str(r['id']))
+
+    terminal_migrate_menu = TerminalMenu(title="Main Menu -> VM Menu\nChoose a Node to Migrate: " + vm_selected + "\n",
+                                         menu_entries=terminal_migrate_menu_items, clear_screen=True)
+    while not terminal_migrate_menu_exit:
+        selection = terminal_migrate_menu.show()
+
+        if selection == 0:
+            terminal_migrate_menu_exit = True
+
+        if not selection == 0:
+            print(terminal_migrate_menu_items[selection])
+
+            task_id = config.proxmoxAPI.nodes(host_node).qemu(vm_id).migrate.create(target=terminal_migrate_menu_items[selection], online='1')
+            print(task_id)
+            terminal_migrate_menu_exit = True
+
     return
 
 

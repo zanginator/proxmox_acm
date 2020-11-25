@@ -62,6 +62,11 @@ This is so that if the cluster drops to just one machine being online, the clust
 If Quorum is not available, some administrative functions may fail (and Wake-On-LAN).
 
 ## Changelog
+### 0.0.3 (2020-11-25)
+- Added Manual Migration of VMs
+  - Accessed via the VM Menu
+- Added Migration Toggle (stored in DB for persistence and for later use)
+
 ### 0.0.2 (2020-11-12)
 - Cleanup of Code.
   - Applied proper Python forming to some functions.
