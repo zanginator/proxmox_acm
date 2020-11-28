@@ -11,6 +11,7 @@ from tinydb import TinyDB, Query
 # ACM imports
 import proxmox_acm_node_menu as pni
 import proxmox_acm_vm_menu as pvi
+import proxmox_acm_migration as pmig
 import config
 
 __author__ = "zanginator"
@@ -45,11 +46,18 @@ def preview_info(menu_item) -> str:
         try:
             return str(cluster_status())
         except:
+            # Present a nice error if it falls over.
             return "Error with host contact."
     elif menu_item == "Node Information":
         return "View Node Specific Data."
     elif menu_item == "VM Information":
         return "View VM Specific Data."
+    elif menu_item == "Migration Status":
+        try:
+            return str(pmig.migration_status_all())
+        except:
+            # Present a nice error if it falls over.
+            return "Migration Status can not be viewed at this time."
     return str(datetime.datetime.now())
 
 
@@ -64,8 +72,8 @@ def main():
     database_setup()
 
     # Setup the Menu
-    terminal_main_menu_items = ["Node Status", "Node Information", "VM Information", "Cluster", "Raw Cluster Resource",
-                                "Rebuild Database", "Quit"]
+    terminal_main_menu_items = ["Node Status", "Node Information", "VM Information", "Migration Status", "Cluster",
+                                "Raw Cluster Resource", "Rebuild Database", "Quit"]
     terminal_main_menu = TerminalMenu(title="Main Menu\nConnected with: " + api_host + "\n",
                                       menu_entries=terminal_main_menu_items, preview_command=preview_info,
                                       preview_size=0.75, clear_screen=True)
@@ -73,17 +81,17 @@ def main():
     menu_switcher = {
         1: pni.main,
         2: pvi.main,
-        3: cluster_stat,
-        4: stat_all,
-        5: rebuild_db,
-        6: exit_app
+        4: cluster_stat,
+        5: stat_all,
+        6: rebuild_db,
+        7: exit_app
     }
 
     # Run the Menu
     while not config.terminal_main_menu_exit:
         selection = terminal_main_menu.show()
 
-        if not selection == 0:
+        if selection not in (0, 3):
             func = menu_switcher.get(selection)
             func()
 
@@ -99,9 +107,14 @@ def stat_all() -> None:
     cluster_resource = config.proxmoxAPI.cluster.resources.get(type='node')
     cluster_resource_stat = json.dumps(cluster_resource, separators=(',', ':'), indent=4, sort_keys=True)
     print(cluster_resource_stat)
-    cluster_resource_2 = config.proxmoxAPI.cluster.status.get()
-    cluster_resource_stat_2 = json.dumps(cluster_resource_2, separators=(',', ':'), indent=4, sort_keys=True)
-    print(cluster_resource_stat_2)
+    return_thing = config.proxmoxAPI.nodes("sayuki").rrddata.get(timeframe='hour', cf='AVERAGE')
+    print(type(return_thing))
+    pos = int(len(return_thing) - 1)
+    print(return_thing[pos])
+    print(type(return_thing[pos]))
+    testing = return_thing[pos]
+    print(testing["loadavg"])
+
     time.sleep(10)  # For Testing
     return
 

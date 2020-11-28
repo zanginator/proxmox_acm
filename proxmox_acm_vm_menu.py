@@ -4,6 +4,7 @@ from tinydb import where
 
 # ACM imports
 import config
+import proxmox_acm_migration as pmig
 
 vm_select = False
 vm_selected = ""
@@ -82,6 +83,12 @@ def vm_stats(menu_item) -> str:
     elif menu_item == "Toggle Migration":
         result = [r.get('migration') for r in config.db.table('vm').search(where('id') == vm_selected)]
         return str(str(result).lower() in ["['true']"])
+    elif menu_item == "Manual Migration":
+        vm_id = vm_selected[len("qemu/"):]
+        if (pmig.migration_status(vm_id, "all")) == "running":
+            return "Manual Migration Unavailable - Migration in progress."
+        else:
+            return "Manual Migration Ready"
     return ""
 
 
@@ -108,48 +115,17 @@ def vm_menu() -> None:
                     # Set to true
                     config.db.table('vm').update({'migration': 'true'}, doc_ids=[r.doc_id])
         elif selection == 4:
-            # Manual Migration
-            migrate_menu()
+            # Call the Manual Migration Menu in pmig
+            # Only enter if no Migration is in progress.
+            vm_id = vm_selected[len("qemu/"):]
+            if (pmig.migration_status(vm_id, "all")) != "running":
+                pmig.migrate_menu(vm_selected)
         elif selection == 5:
             # Go back to VM selection
             vm_selection()
         elif selection == 6:
             # Exit to main menu
             terminal_vm_menu_exit = True
-    return
-
-
-def migrate_menu() -> None:
-    terminal_migrate_menu_exit = False
-    host_node = ""
-    terminal_migrate_menu_items = ["Cancel Migration"]
-    stat = config.proxmoxAPI.cluster.resources.get(type='vm')
-    for info in stat:
-        if info["id"] == vm_selected:
-            host_node = str(info["node"])
-            # Strip "qemu/" string from VM ID.
-            vm_id = vm_selected[len("qemu/"):]
-
-    # Assemble String for Menu
-    for r in config.db.table('node'):
-        if (r['status'] == "online") and (r['id'] != host_node):
-            terminal_migrate_menu_items.append(str(r['id']))
-
-    terminal_migrate_menu = TerminalMenu(title="Main Menu -> VM Menu\nChoose a Node to Migrate: " + vm_selected + "\n",
-                                         menu_entries=terminal_migrate_menu_items, clear_screen=True)
-    while not terminal_migrate_menu_exit:
-        selection = terminal_migrate_menu.show()
-
-        if selection == 0:
-            terminal_migrate_menu_exit = True
-
-        if not selection == 0:
-            print(terminal_migrate_menu_items[selection])
-
-            task_id = config.proxmoxAPI.nodes(host_node).qemu(vm_id).migrate.create(target=terminal_migrate_menu_items[selection], online='1')
-            print(task_id)
-            terminal_migrate_menu_exit = True
-
     return
 
 

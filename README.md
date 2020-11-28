@@ -19,9 +19,9 @@ ACM does not require many privileges, so full access is not required.
 First setup a role. To save confusion name it something like ACMUser.
 It will need the following privileges:
 - Sys.Audit
-- Sys.PowerMgmt (not required as of 0.0.1)
+- Sys.PowerMgmt (not required as of 0.0.3)
 - VM.Audit
-- VM.Migrate (not required as of 0.0.1)
+- VM.Migrate (required as of 0.0.3)
 
 ![ACM Roles](https://raw.githubusercontent.com/zanginator/proxmox_acm/main/images/ACM_Roles.png)
 
@@ -62,6 +62,12 @@ This is so that if the cluster drops to just one machine being online, the clust
 If Quorum is not available, some administrative functions may fail (and Wake-On-LAN).
 
 ## Changelog
+### 0.0.4 (2020-11-28)
+- Moved Migration controls to separate file.
+- Added Migration Status Viewer.
+- Added Suggested Migration Node.
+- Manual Migration lock if VM is in flight.
+
 ### 0.0.3 (2020-11-25)
 - Added Manual Migration of VMs
   - Accessed via the VM Menu
